@@ -75,13 +75,14 @@
 
 3. **Registered web app**
    - App: "TWG Web" (ID: `1:192374801010:web:8d4ec4e4cd168ed95b78eb`)
-   - Config obtained and saved to `.env.local` (gitignored)
+   - Config obtained and saved to `apps/web/.env.local` (gitignored)
 
 4. **Updated environment config**
    - `.env.development.example` updated with real project shape
    - `.env.example` updated with Admin SDK auth options
    - `.gitignore` updated with service account key patterns
-   - `.env.local` created locally with real config (not committed)
+   - `apps/web/.env.local` created locally with real config (not committed)
+   - Note: Next.js reads `.env.local` from its own CWD (`apps/web/`), not the repo root
 
 5. **Documented auth strategy** (`docs/FIREBASE_AUTH_STRATEGY.md`)
    - Custom claims: `role` (owner/admin/member) + `category` (internal/external)
@@ -90,10 +91,16 @@
    - Admin SDK initialization via Application Default Credentials
    - Firestore rule replacement plan
 
+### Manual steps completed by owner
+
+- Upgraded to Blaze (pay-as-you-go) plan
+- Enabled Email/Password auth provider in Firebase Console
+- Enabled Google auth provider in Firebase Console
+
 ### What remains deferred
 
 - Service account key download (manual step for owner)
-- Enable Email/Password auth provider in Firebase Console (manual step)
+- Verify Google Auth authorized domains for Codespaces
 - Deploy Firestore security rules to live project
 - Deploy `onUserCreated` Cloud Function
 - Implement actual `InternalAuthGuard` auth subscription

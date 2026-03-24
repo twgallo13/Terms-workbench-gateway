@@ -49,15 +49,16 @@ npm install
 npm install -g firebase-tools
 firebase login --no-localhost   # for Codespaces (headless)
 
-# Copy env example and fill in real values
-cp .env.development.example .env.local
-# Edit .env.local with real Firebase config from:
+# Copy env example into the Next.js app directory
+cp .env.development.example apps/web/.env.local
+# Edit apps/web/.env.local with real Firebase config from:
 #   firebase apps:sdkconfig WEB <app-id> --project twg-dev
+# Next.js reads .env.local from its own directory (apps/web/), NOT the repo root.
 
 # (Optional) For server-side admin SDK:
 # 1. Download service account key from Firebase Console
-# 2. Save as service-account-key.json (gitignored)
-# 3. Add to .env.local: GOOGLE_APPLICATION_CREDENTIALS=./service-account-key.json
+# 2. Save as apps/web/service-account-key.json (gitignored)
+# 3. Add to apps/web/.env.local: GOOGLE_APPLICATION_CREDENTIALS=./service-account-key.json
 
 # Build the shared package
 npm run build --workspace=@twg/shared
