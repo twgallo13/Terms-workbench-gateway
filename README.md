@@ -121,12 +121,14 @@ node ../../scripts/backfill-claims.mjs
 - **Cloud Function** — `onUserCreated` deployed to `twg-dev` (sets claims, creates user doc)
 - **Firestore data layer** — typed CRUD helpers with auto-timestamps and activity logging
 - **Sites management** — full CRUD with inline create/edit, admin-only writes, real Firestore data
+- **Vendors management** — full CRUD with list/detail/create/edit, status filtering, address sub-forms, internal-user writes
 - **Firestore rules hardened** — `isInternalUser()` and `isAdmin()` use real custom claims
+- **Firestore indexes** — composite index for vendor status filtering
 - PDF renderer: Cloud Run placeholder
 
 ### What's intentionally deferred
 - Google sign-in UI (provider already enabled)
-- Vendor, Brand, Contact CRUD operations
+- Brand, Contact CRUD operations
 - Quote/agreement workflow logic
 - Send/sign/acceptance flow
 - Access link issuance and validation
