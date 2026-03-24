@@ -22,10 +22,11 @@ Vendor onboarding and terms management platform for Shiekh Shoes.
 │   ├── src/components/ui/     # Reusable UI primitives (button, empty-state)
 │   ├── src/lib/auth/          # Server-side session verification
 │   ├── src/lib/firebase/      # Firebase client + admin SDK init
+│   ├── src/lib/firestore/     # Typed Firestore CRUD helpers + activity logging
 │   └── src/lib/guards/        # Auth guards (client + server boundary)
 ├── packages/shared/           # Shared types, enums, models, constants
 ├── functions/                 # Cloud Functions (auth triggers)
-├── scripts/                   # Admin scripts (claims backfill)
+├── scripts/                   # Admin scripts (claims backfill, site seeding)
 ├── services/pdf-renderer/     # Cloud Run PDF service placeholder
 └── firebase/                  # Firestore rules, Storage rules, indexes
 ```
@@ -118,12 +119,14 @@ node ../../scripts/backfill-claims.mjs
 - **Real Firebase Auth** — Email/Password sign-in, session cookie, server verification
 - **Auth guard** — dual-layer (server + client) with claims provisioning race handling
 - **Cloud Function** — `onUserCreated` deployed to `twg-dev` (sets claims, creates user doc)
+- **Firestore data layer** — typed CRUD helpers with auto-timestamps and activity logging
+- **Sites management** — full CRUD with inline create/edit, admin-only writes, real Firestore data
+- **Firestore rules hardened** — `isInternalUser()` and `isAdmin()` use real custom claims
 - PDF renderer: Cloud Run placeholder
 
 ### What's intentionally deferred
 - Google sign-in UI (provider already enabled)
-- Real Firestore data fetching
-- CRUD operations for all entities
+- Vendor, Brand, Contact CRUD operations
 - Quote/agreement workflow logic
 - Send/sign/acceptance flow
 - Access link issuance and validation

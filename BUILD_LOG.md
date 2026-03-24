@@ -185,3 +185,61 @@ InternalAuthGuard (client) → onAuthStateChanged → check claims → retry if 
 2. Enter `theo@shiekhshoes.org` with a password
 3. `onUserCreated` will set `{ role: "owner", category: "internal" }` automatically
 4. Sign in at `/login` with those credentials
+
+---
+
+## 2026-03-24 — Phase 2A: Data Layer & Sites Foundation
+
+**Branch:** `feat/phase-2a-data-layer-sites`
+
+### What was done
+
+1. **Typed Firestore data layer** (`apps/web/src/lib/firestore/`)
+   - `helpers.ts` — generic CRUD helpers: `getDocument<T>`, `listDocuments<T>`, `createDocument<T>`, `updateDocument`, `deleteDocument`
+   - Auto-stamps `createdAt`/`updatedAt`/`createdBy`/`updatedBy` on writes
+   - `logActivity()` — writes audit entries to `activityLogs` collection
+   - Typed query support: `QueryFilter` (where clauses), `QueryOrder` (orderBy)
+   - Barrel export via `index.ts`
+
+2. **Sites CRUD** (server actions pattern)
+   - `actions.ts` — `getSites()`, `getSite()`, `createSite()`, `updateSite()`
+   - Server-side validation for required fields (name, displayLabel, domain)
+   - Admin-only write enforcement (`role === "owner"`)
+   - Activity logging on every create/update
+   - `revalidatePath` for automatic cache invalidation
+
+3. **Sites UI**
+   - `page.tsx` — server component that fetches real Firestore data
+   - `sites-table.tsx` — client component with inline create/edit, empty state, loading
+   - `site-form.tsx` — validated form with `useActionState`, error display, pending state
+   - Added "Sites" to sidebar navigation (Globe icon)
+   - Added "Sites" to breadcrumbs label map
+
+4. **Firestore rules hardened**
+   - `isInternalUser()` → `request.auth.token.category == "internal"`
+   - `isAdmin()` → `isInternalUser() && request.auth.token.role == "owner"`
+   - Deployed to `twg-dev`
+
+5. **Seed script** (`scripts/seed-sites.mjs`)
+   - Seeds Shiekh.com, Karmaloop.com, MLTD.com
+   - Idempotent (skips existing sites by domain)
+   - Executed successfully against `twg-dev`
+
+### Architecture decisions
+
+- **Server actions** over API route handlers — cleaner integration with Next.js 15 App Router forms
+- **Inline editing** over separate detail pages — Sites are simple entities, inline edit in the table is more efficient
+- **Data layer in `lib/firestore/`** — shared helpers reusable by Vendors, Brands, Contacts in Phase 2B+
+- **Admin SDK on server only** — all Firestore operations go through Admin SDK via server actions, never client-side
+
+### Verification results
+
+| Test | Result |
+|------|--------|
+| GET /sites (no auth) → 307 redirect to /login | ✅ |
+| GET /sites (authenticated) → 200 with real data | ✅ |
+| Sites page shows Shiekh.com, Karmaloop.com, MLTD.com | ✅ |
+| `npm run build` passes | ✅ |
+| Seed script idempotent (re-run skips existing) | ✅ |
+| Firestore rules deployed with claim checks | ✅ |
+| No secrets committed | ✅ |
