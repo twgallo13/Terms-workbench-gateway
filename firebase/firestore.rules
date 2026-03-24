@@ -1,0 +1,269 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper functions ─────────────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isInternalUser() {
+      // TODO: implement proper internal user check via custom claims or allowlist lookup
+      return isAuthenticated();
+    }
+
+    function isAdmin() {
+      // TODO: implement admin role check via custom claims
+      return isAuthenticated();
+    }
+
+    function isOwnerOrAdmin(vendorId) {
+      // TODO: implement vendor-scoped access check
+      return isAuthenticated();
+    }
+
+    // ─── Default deny ─────────────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ─── Users ────────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ─── Roles & Permissions ──────────────────────────────────────────────────
+    match /roles/{roleId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /permissions/{permId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ─── Domain & Email Allowlists ────────────────────────────────────────────
+    match /domainAllowlist/{entryId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /emailAllowlist/{entryId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ─── Access Assignments ───────────────────────────────────────────────────
+    match /accessAssignments/{assignId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ─── Vendors ──────────────────────────────────────────────────────────────
+    match /vendors/{vendorId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    // ─── Brands ───────────────────────────────────────────────────────────────
+    match /brands/{brandId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    // ─── Contacts ─────────────────────────────────────────────────────────────
+    match /contacts/{contactId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    match /brandContactAssignments/{assignId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    // ─── Sites & Approvals ────────────────────────────────────────────────────
+    match /sites/{siteId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /siteApprovals/{approvalId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    // ─── Commercial ───────────────────────────────────────────────────────────
+    match /services/{serviceId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /fees/{feeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /pricingProfiles/{profileId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    match /operationalProfiles/{profileId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    // ─── Templates ────────────────────────────────────────────────────────────
+    match /quoteTemplates/{tplId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /agreementTemplates/{tplId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /packageLayouts/{layoutId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /clauseLibrary/{clauseId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /termsVersions/{versionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /wbChecklistTemplates/{tplId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /notificationTemplates/{tplId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ─── Quotes ───────────────────────────────────────────────────────────────
+    match /quotes/{quoteId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    match /quoteVersions/{versionId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    // ─── Agreements ───────────────────────────────────────────────────────────
+    match /agreements/{agreementId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    match /agreementVersions/{versionId} {
+      allow read: if isAuthenticated();
+      // Immutable once created — no updates allowed
+      allow create: if isInternalUser();
+    }
+
+    match /signerAssignments/{assignId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    match /accessLinks/{linkId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    match /acceptanceEvents/{eventId} {
+      allow read: if isAuthenticated();
+      // Immutable — create only via Cloud Functions
+      allow write: if false;
+    }
+
+    match /changeRequests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isInternalUser();
+    }
+
+    // ─── Documents ────────────────────────────────────────────────────────────
+    match /documents/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    // ─── WB Handoffs ──────────────────────────────────────────────────────────
+    match /wbHandoffs/{handoffId} {
+      allow read: if isInternalUser();
+      allow write: if isInternalUser();
+    }
+
+    // ─── Workflow ─────────────────────────────────────────────────────────────
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated();
+      allow write: if isInternalUser();
+    }
+
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated() && resource.data.recipientId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.recipientId == request.auth.uid;
+    }
+
+    match /activityLogs/{logId} {
+      allow read: if isInternalUser();
+      // Immutable — create only via Cloud Functions
+      allow write: if false;
+    }
+
+    // ─── System Settings ──────────────────────────────────────────────────────
+    match /systemSettings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /requiredFieldRules/{ruleId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /customFieldDefinitions/{fieldId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /dashboardConfigs/{configId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /savedViews/{viewId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /featureFlags/{flagId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /numberingRules/{ruleId} {
+      allow read: if isInternalUser();
+      allow write: if isAdmin();
+    }
+
+    match /integrationConfigs/{configId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+  }
+}

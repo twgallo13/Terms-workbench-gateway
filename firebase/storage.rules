@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ─── Default deny ─────────────────────────────────────────────────────────
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    // ─── Signed agreement PDFs — immutable after creation ─────────────────────
+    match /agreements/{agreementId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      // TODO: restrict write to Cloud Functions only for final signed copies
+      allow write: if request.auth != null;
+    }
+
+    // ─── Quote documents ──────────────────────────────────────────────────────
+    match /quotes/{quoteId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // ─── General document uploads ─────────────────────────────────────────────
+    match /documents/{vendorId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      // TODO: vendor-scoped write access
+      allow write: if request.auth != null;
+    }
+
+    // ─── Vendor brand assets ──────────────────────────────────────────────────
+    match /brands/{brandId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+  }
+}
