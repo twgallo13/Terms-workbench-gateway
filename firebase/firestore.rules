@@ -9,18 +9,18 @@ service cloud.firestore {
     }
 
     function isInternalUser() {
-      // TODO: implement proper internal user check via custom claims or allowlist lookup
-      return isAuthenticated();
+      return isAuthenticated()
+        && request.auth.token.category == "internal";
     }
 
     function isAdmin() {
-      // TODO: implement admin role check via custom claims
-      return isAuthenticated();
+      return isInternalUser()
+        && request.auth.token.role == "owner";
     }
 
     function isOwnerOrAdmin(vendorId) {
       // TODO: implement vendor-scoped access check
-      return isAuthenticated();
+      return isInternalUser();
     }
 
     // ─── Default deny ─────────────────────────────────────────────────────────
