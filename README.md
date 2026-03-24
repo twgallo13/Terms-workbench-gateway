@@ -45,18 +45,25 @@ cd Terms-workbench-gateway
 # Install all workspace dependencies
 npm install
 
-# Copy env example files
-cp .env.example .env.local
-cp .env.development.example .env.development.local
+# Firebase CLI (if not already installed)
+npm install -g firebase-tools
+firebase login --no-localhost   # for Codespaces (headless)
+
+# Copy env example and fill in real values
+cp .env.development.example .env.local
+# Edit .env.local with real Firebase config from:
+#   firebase apps:sdkconfig WEB <app-id> --project twg-dev
+
+# (Optional) For server-side admin SDK:
+# 1. Download service account key from Firebase Console
+# 2. Save as service-account-key.json (gitignored)
+# 3. Add to .env.local: GOOGLE_APPLICATION_CREDENTIALS=./service-account-key.json
 
 # Build the shared package
 npm run build --workspace=@twg/shared
 
 # Start the dev server
 npm run dev --workspace=@twg/web
-
-# (Optional) Start Firebase emulators
-npm run emulators
 ```
 
 ### Available Scripts
