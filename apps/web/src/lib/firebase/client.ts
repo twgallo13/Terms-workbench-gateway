@@ -13,9 +13,6 @@ const firebaseConfig = {
 };
 
 let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
 
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
@@ -23,8 +20,8 @@ if (!getApps().length) {
   app = getApps()[0]!;
 }
 
-auth = getAuth(app);
-db = getFirestore(app);
-storage = getStorage(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 export { app, auth, db, storage };
