@@ -1,0 +1,56 @@
+# BUILD_LOG.md
+
+## 2026-03-24 — Phase 0 Web Rebuild (Path B)
+
+**Branch:** `feat/phase-0-web-rebuild`
+**Source:** Selective migration from `backup/phase-0-checkpoint-20260324`
+
+### What was done
+
+1. **Created feature branch from main** with clean toolchain:
+   - Tailwind CSS v4 + `@tailwindcss/postcss`
+   - ESLint flat config (`next/core-web-vitals` + `next/typescript`)
+   - Prettier with `prettier-plugin-tailwindcss`
+   - `lucide-react` icons, `clsx` utility
+   - `globals.css` with Tailwind import and design tokens
+
+2. **Migrated unchanged from backup:**
+   - `packages/shared/` — enums (25+), models (40+ interfaces), constants, seed data
+   - `functions/` — Cloud Functions Gen 2 entry, auth trigger
+   - `firebase/` — Firestore rules, Storage rules, indexes placeholder
+   - `services/pdf-renderer/` — Cloud Run placeholder with Dockerfile
+   - Root configs — `package.json`, `tsconfig.base.json`, `.gitignore`, `.firebaserc`, `firebase.json`
+   - Env example files — `.env.example`, `.env.development.example`, `.env.staging.example`, `.env.production.example`
+   - Web app infra — `lib/firebase/` (client + admin SDK), `lib/guards/` (auth guards + server boundary)
+
+3. **Rebuilt fresh (Tailwind, no inline styles):**
+   - Internal shell: Sidebar, TopHeader, Breadcrumbs, PageHeader, Card/CardHeader, StatusPill, TabShell, RightRail, FooterActionBar, AppShell
+   - Vendor shell: VendorReviewLayout, VendorPageShell, VendorSummaryAction
+   - UI primitives: Button (4 variants), EmptyState
+   - 17 internal routes with styled table/card/tab compositions
+   - 8 public/vendor routes with mobile-friendly layout
+   - Dashboard with 6 business-facing sections (Action Required, My Queue, Team Queue, Snapshot Metrics, Alerts & Exceptions, Recent Activity)
+
+4. **Fixed ESLint errors** in migrated Firebase lib files (`let` → `const`, removed unused import)
+
+### What's intentionally deferred (marked with TODO)
+
+- Firebase Auth sign-in flow
+- Real Firestore data fetching (all routes show placeholder data)
+- CRUD operations for all entities
+- Quote/agreement creation, versioning, send/sign workflow
+- Access link issuance, validation, and revocation
+- PDF generation via pdf-renderer service
+- WB handoff checklist logic
+- Notification delivery and task assignment
+- Audit/activity event triggers
+- Role-based access control enforcement
+- Search functionality
+- Responsive sidebar collapse for mobile
+- Middle click / right-click behavior on nav links
+
+### Build verification
+
+- `npm run build` passes with 0 errors
+- All 25 routes compile successfully (17 static + 8 dynamic)
+- Shared package compiles clean via `tsc`

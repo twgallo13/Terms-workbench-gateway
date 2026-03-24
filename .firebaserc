@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "twg-dev",
+    "staging": "twg-staging",
+    "production": "twg-prod"
+  }
+}
