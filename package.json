@@ -1,0 +1,25 @@
+{
+  "name": "terms-workbench-gateway",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Terms Workbench Gateway — Pre-WB vendor onboarding platform",
+  "workspaces": [
+    "apps/web",
+    "packages/shared",
+    "functions",
+    "services/pdf-renderer"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/web",
+    "build:shared": "npm run build --workspace=packages/shared",
+    "build:web": "npm run build --workspace=apps/web",
+    "build:functions": "npm run build --workspace=functions",
+    "lint": "npm run lint --workspace=apps/web",
+    "emulators": "firebase emulators:start",
+    "emulators:export": "firebase emulators:export ./firebase/emulator-data"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
