@@ -111,3 +111,77 @@
 
 - **Service account key:** Download from Firebase Console → Project Settings → Service Accounts → Generate New Private Key → save as `service-account-key.json`
 - **Auth provider:** Enable Email/Password in Firebase Console → Authentication → Sign-in method
+
+---
+
+## 2026-03-24 — Phase 1B: Internal Auth Implementation
+
+**Branch:** `feat/phase-1b-internal-auth`
+
+### What was done
+
+1. **Login page** (`apps/web/src/app/(public)/login/page.tsx`)
+   - Email/Password sign-in via Firebase Auth client SDK
+   - Loading state, friendly error messages for all Firebase error codes
+   - Error banners for unauthorized and provisioning failures (via URL params)
+
+2. **Session route handler** (`apps/web/src/app/api/auth/session/route.ts`)
+   - `POST` — verifies Firebase ID token, creates httpOnly `__session` cookie (5-day expiry)
+   - `DELETE` — clears session cookie (logout)
+   - Cookie: httpOnly, secure in production, sameSite=lax
+
+3. **Server-side session verification** (`apps/web/src/lib/auth/session.ts`)
+   - `getSessionUser()` — reads `__session` cookie, verifies via `adminAuth.verifySessionCookie()`
+   - `requireInternalUser()` — redirects to `/login` if unauthenticated, blocks external category
+
+4. **Admin SDK** (`apps/web/src/lib/firebase/admin.ts`)
+   - Loads service account key from `GOOGLE_APPLICATION_CREDENTIALS` relative path
+   - Falls back to ADC for GCP environments
+
+5. **Internal auth guard** (`apps/web/src/lib/guards/internal-auth-guard.tsx`)
+   - Client-side `onAuthStateChanged` subscription
+   - Claims provisioning race: retries `getIdTokenResult(true)` up to 5× at 2s intervals
+   - Displays "Setting up your account…" during provisioning
+   - Redirects external or unauthenticated users to `/login`
+
+6. **Internal layout** — server calls `requireInternalUser()` before render
+
+7. **Logout** — header button calls `DELETE /api/auth/session` + `signOut(auth)`
+
+8. **Cloud Function** (`onUserCreated` v1 auth trigger)
+   - Sets custom claims `{ role, category }` based on seed constants
+   - Creates Firestore user doc in `users` collection
+   - Deployed to `twg-dev` (us-central1)
+
+9. **Backfill script** (`scripts/backfill-claims.mjs`)
+   - Sets claims for users created before function deploy
+   - Usage: `cd apps/web && node ../../scripts/backfill-claims.mjs`
+
+### Auth/session approach
+
+```
+Client → signInWithEmailAndPassword → getIdToken
+       → POST /api/auth/session { idToken }
+Server → verifyIdToken → createSessionCookie → Set-Cookie: __session (httpOnly, 5 days)
+Internal layout (server) → requireInternalUser() → verifySessionCookie → redirect if invalid
+InternalAuthGuard (client) → onAuthStateChanged → check claims → retry if provisioning
+```
+
+### Verification results
+
+| Test | Result |
+|------|--------|
+| GET /dashboard (no cookie) → 307 redirect to /login | ✅ |
+| GET /login → 200 OK | ✅ |
+| GET /vendor-access/test-token → 200 (no auth) | ✅ |
+| POST /api/auth/session (no token) → 400 rejected | ✅ |
+| onUserCreated function deployed and active | ✅ |
+| No secrets in committed files | ✅ |
+| npm run build passes (all workspaces) | ✅ |
+
+### First test user setup
+
+1. Go to Firebase Console → Authentication → Users → Add user
+2. Enter `theo@shiekhshoes.org` with a password
+3. `onUserCreated` will set `{ role: "owner", category: "internal" }` automatically
+4. Sign in at `/login` with those credentials

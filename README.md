@@ -16,13 +16,16 @@ Vendor onboarding and terms management platform for Shiekh Shoes.
 ├── apps/web/                  # Next.js web application
 │   ├── src/app/(internal)/    # Internal admin routes (sidebar shell)
 │   ├── src/app/(public)/      # Vendor-facing / login routes
+│   ├── src/app/api/auth/      # Session route handler (set/clear cookie)
 │   ├── src/components/shell/  # Shell components (sidebar, header, card, etc.)
 │   ├── src/components/vendor/ # Vendor-facing UI components
 │   ├── src/components/ui/     # Reusable UI primitives (button, empty-state)
+│   ├── src/lib/auth/          # Server-side session verification
 │   ├── src/lib/firebase/      # Firebase client + admin SDK init
 │   └── src/lib/guards/        # Auth guards (client + server boundary)
 ├── packages/shared/           # Shared types, enums, models, constants
-├── functions/                 # Cloud Functions Gen 2
+├── functions/                 # Cloud Functions (auth triggers)
+├── scripts/                   # Admin scripts (claims backfill)
 ├── services/pdf-renderer/     # Cloud Run PDF service placeholder
 └── firebase/                  # Firestore rules, Storage rules, indexes
 ```
@@ -55,10 +58,10 @@ cp .env.development.example apps/web/.env.local
 #   firebase apps:sdkconfig WEB <app-id> --project twg-dev
 # Next.js reads .env.local from its own directory (apps/web/), NOT the repo root.
 
-# (Optional) For server-side admin SDK:
-# 1. Download service account key from Firebase Console
+# For server-side admin SDK (required for auth):
+# 1. Download service account key from Firebase Console → Project Settings → Service Accounts
 # 2. Save as apps/web/service-account-key.json (gitignored)
-# 3. Add to apps/web/.env.local: GOOGLE_APPLICATION_CREDENTIALS=./service-account-key.json
+# 3. Uncomment in apps/web/.env.local: GOOGLE_APPLICATION_CREDENTIALS=./service-account-key.json
 
 # Build the shared package
 npm run build --workspace=@twg/shared
@@ -76,9 +79,33 @@ npm run dev --workspace=@twg/web
 | `npm run lint` | Run ESLint across web app |
 | `npm run emulators` | Start Firebase emulators (auth, firestore, storage, functions) |
 
-## Phase 0 Status
+## Auth Architecture
 
-This is a **Phase 0 scaffold only**. The UI shell and route structure are complete, but no real data fetching, CRUD operations, or workflow logic is implemented.
+### Session flow
+1. User signs in on `/login` with Email/Password via Firebase Auth client SDK
+2. Client obtains an ID token and POSTs it to `/api/auth/session`
+3. Server verifies the token via Firebase Admin SDK and sets an httpOnly `__session` cookie (5-day expiry)
+4. Internal routes are protected by server-side layout verification (`requireInternalUser()`)
+5. Client-side `InternalAuthGuard` handles auth state, claims provisioning race, and logout detection
+6. Logout: client calls `DELETE /api/auth/session` to clear cookie, then `signOut()` on Firebase Auth
+
+### Custom claims
+Set automatically by `onUserCreated` Cloud Function:
+- `theo@shiekhshoes.org`, `theo@shiekh.com` → `{ role: "owner", category: "internal" }`
+- `@shiekhshoes.org` domain → `{ role: "member", category: "internal" }`
+- All others → `{ role: "member", category: "external" }`
+
+### First-login provisioning
+New users may sign in before claims are set by the Cloud Function. The `InternalAuthGuard` retries token refresh up to 5 times (2s apart), showing an "account provisioning" state. If claims never arrive, the user sees a friendly error.
+
+### Backfill existing users
+For users created before the Cloud Function was deployed:
+```bash
+cd apps/web
+node ../../scripts/backfill-claims.mjs
+```
+
+## Current Status
 
 ### What's built
 - Full monorepo with 4 workspaces
@@ -88,11 +115,13 @@ This is a **Phase 0 scaffold only**. The UI shell and route structure are comple
 - Dashboard with 6 placeholder sections
 - Shared types: 25+ enums, 40+ interfaces, constants
 - Firebase rules (Firestore + Storage) with default-deny
-- Cloud Function: auth trigger for user provisioning
+- **Real Firebase Auth** — Email/Password sign-in, session cookie, server verification
+- **Auth guard** — dual-layer (server + client) with claims provisioning race handling
+- **Cloud Function** — `onUserCreated` deployed to `twg-dev` (sets claims, creates user doc)
 - PDF renderer: Cloud Run placeholder
 
 ### What's intentionally deferred
-- Firebase Auth sign-in flow
+- Google sign-in UI (provider already enabled)
 - Real Firestore data fetching
 - CRUD operations for all entities
 - Quote/agreement workflow logic
