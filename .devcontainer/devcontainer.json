@@ -1,0 +1,10 @@
+{
+  "name": "TWG Web Dev",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "TWG Web Preview",
+      "onAutoForward": "notify"
+    }
+  }
+}
