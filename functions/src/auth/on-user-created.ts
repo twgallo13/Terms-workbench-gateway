@@ -1,7 +1,7 @@
 import * as auth from "firebase-functions/v1/auth";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
-import { COLLECTIONS, SEED_INTERNAL_DOMAINS, SEED_ADMIN_EMAILS } from "@twg/shared";
+import { COLLECTIONS, SEED_INTERNAL_DOMAINS, SEED_ADMIN_EMAILS } from "../config/seed-constants";
 
 /**
  * Triggered when a new Firebase Auth user is created.
