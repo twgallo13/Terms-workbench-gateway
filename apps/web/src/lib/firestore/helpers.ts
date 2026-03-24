@@ -2,7 +2,6 @@ import {
   type DocumentData,
   type WhereFilterOp,
   type OrderByDirection,
-  FieldValue,
 } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
 
@@ -65,7 +64,7 @@ export async function listDocuments<T>(
 
 export async function createDocument<T extends { id?: string }>(
   collection: string,
-  data: Omit<T, "id" | "createdAt" | "updatedAt">,
+  data: Omit<T, "id" | "createdAt" | "updatedAt" | "createdBy" | "updatedBy">,
   actorId: string,
 ): Promise<string> {
   const now = new Date().toISOString();

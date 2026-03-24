@@ -111,7 +111,7 @@ export async function updateSite(
   const errors = validateSiteInput(input);
   if (errors.length > 0) return { success: false, errors };
 
-  await updateDocument(COLLECTIONS.sites, id, input, user.uid);
+  await updateDocument(COLLECTIONS.sites, id, { ...input }, user.uid);
 
   await logActivity({
     eventType: ActivityEventType.Updated,
