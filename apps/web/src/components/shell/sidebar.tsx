@@ -17,6 +17,7 @@ import {
   BarChart3,
   ClipboardList,
   Settings,
+  Globe,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { label: "Contacts", href: "/contacts", icon: Users },
   { label: "Quotes", href: "/quotes", icon: FileText },
   { label: "Agreements", href: "/agreements", icon: FileSignature },
+  { label: "Sites", href: "/sites", icon: Globe },
   { label: "Documents", href: "/documents", icon: FolderOpen },
   { label: "WB Handoffs", href: "/wb-handoffs", icon: ArrowRightLeft },
   { label: "Tasks", href: "/tasks", icon: CheckSquare },

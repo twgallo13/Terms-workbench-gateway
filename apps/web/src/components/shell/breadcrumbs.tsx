@@ -12,6 +12,7 @@ const LABEL_MAP: Record<string, string> = {
   contacts: "Contacts",
   quotes: "Quotes",
   agreements: "Agreements",
+  sites: "Sites",
   documents: "Documents",
   "wb-handoffs": "WB Handoffs",
   tasks: "Tasks",
