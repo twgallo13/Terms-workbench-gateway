@@ -1,21 +1,34 @@
-import { initializeApp, getApps, type App } from "firebase-admin/app";
-import { getAuth, type Auth } from "firebase-admin/auth";
-import { getFirestore, type Firestore } from "firebase-admin/firestore";
-import { getStorage, type Storage } from "firebase-admin/storage";
+import { initializeApp, getApps, cert, type App } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+import { getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 
-let app: App;
+function getAdminApp(): App {
+  if (getApps().length) return getApps()[0]!;
 
-if (!getApps().length) {
-  // TODO: configure service account for production
-  app = initializeApp({
+  // In production (Cloud Run / Cloud Functions), ADC provides credentials automatically.
+  // In local dev, load the service account key from disk.
+  const saKeyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (saKeyPath) {
+    const absPath = resolve(process.cwd(), saKeyPath);
+    const serviceAccount = JSON.parse(readFileSync(absPath, "utf8"));
+    return initializeApp({
+      credential: cert(serviceAccount),
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    });
+  }
+
+  // Fallback: ADC (works in GCP environments)
+  return initializeApp({
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   });
-} else {
-  app = getApps()[0]!;
 }
 
-const adminAuth = getAuth(app);
-const adminDb = getFirestore(app);
-const adminStorage = getStorage(app);
+const adminApp = getAdminApp();
+const adminAuth = getAuth(adminApp);
+const adminDb = getFirestore(adminApp);
+const adminStorage = getStorage(adminApp);
 
-export { app as adminApp, adminAuth, adminDb, adminStorage };
+export { adminApp, adminAuth, adminDb, adminStorage };
