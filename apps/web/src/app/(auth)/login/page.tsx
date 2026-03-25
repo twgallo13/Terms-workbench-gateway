@@ -4,7 +4,6 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
-import { VendorPageShell } from "@/components/vendor";
 import { Button } from "@/components/ui";
 import { LogIn, Loader2 } from "lucide-react";
 
@@ -50,7 +49,6 @@ function LoginForm() {
       const credential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await credential.user.getIdToken();
 
-      // Post token to session route handler to set httpOnly session cookie
       const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -70,7 +68,7 @@ function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto max-w-sm">
+    <form onSubmit={handleSubmit}>
       {error && (
         <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
@@ -133,13 +131,16 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <VendorPageShell
-      title="Sign In"
-      description="Sign in with your Shiekh email to access the Terms Workbench."
-    >
-      <Suspense fallback={<div className="mx-auto max-w-sm animate-pulse h-48" />}>
+    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="mb-5">
+        <h2 className="text-lg font-semibold text-gray-900">Sign In</h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Sign in with your Shiekh email to access the Terms Workbench.
+        </p>
+      </div>
+      <Suspense fallback={<div className="animate-pulse h-48" />}>
         <LoginForm />
       </Suspense>
-    </VendorPageShell>
+    </div>
   );
 }
