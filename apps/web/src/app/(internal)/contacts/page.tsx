@@ -1,22 +1,28 @@
-import { PageHeader, Card } from "@/components/shell";
-import { EmptyState } from "@/components/ui";
-import { Users } from "lucide-react";
+import { PageHeader } from "@/components/shell";
+import { requireInternalUser } from "@/lib/auth/session";
+import { getContacts } from "./actions";
+import { getVendorsForPicker } from "../brands/actions";
+import { ContactsTable } from "./contacts-table";
 
-export default function ContactsPage() {
+export default async function ContactsPage() {
+  const user = await requireInternalUser();
+  const [contacts, vendors] = await Promise.all([
+    getContacts(),
+    getVendorsForPicker(),
+  ]);
+  const canManage = user.category === "internal";
+
   return (
     <div>
       <PageHeader
         title="Contacts"
         description="Manage vendor and brand contacts across all accounts."
       />
-      <Card>
-        <EmptyState
-          icon={<Users className="h-8 w-8" />}
-          title="No contacts yet"
-          description="Contacts will appear here once vendors and brands are created."
-        />
-        {/* TODO: fetch contacts from Firestore, implement search and filters */}
-      </Card>
+      <ContactsTable
+        contacts={contacts}
+        vendors={vendors}
+        canManage={canManage}
+      />
     </div>
   );
 }
