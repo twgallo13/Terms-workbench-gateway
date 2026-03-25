@@ -122,12 +122,15 @@ node ../../scripts/backfill-claims.mjs
 - **Firestore data layer** — typed CRUD helpers with auto-timestamps and activity logging
 - **Sites management** — full CRUD with inline create/edit, admin-only writes, real Firestore data
 - **Vendors management** — full CRUD with list/detail/create/edit, status filtering, address sub-forms, internal-user writes
+- **Brands management** — full CRUD with list/detail/create/edit, status filtering, vendor picker, vendor detail integration
+- **Contacts management** — full CRUD with list/detail/create/edit, status filtering, contact type, isPrimary, vendor picker
+- **Brand-Contact assignments** — assign/remove contacts to brands with role and primary flag, activity logging
 - **Firestore rules hardened** — `isInternalUser()` and `isAdmin()` use real custom claims
-- **Firestore indexes** — composite index for vendor status filtering
+- **Firestore indexes** — composite indexes for vendors, brands, contacts, and assignments
 - PDF renderer: Cloud Run placeholder
 
 ### What's intentionally deferred
-- Brand, Contact CRUD operations
+- Site Approvals (Phase 2D — depends on Brands + Sites)
 - Quote/agreement workflow logic
 - Send/sign/acceptance flow
 - Access link issuance and validation

@@ -5,6 +5,8 @@ import { VendorStatus } from "@twg/shared";
 import type { Address } from "@twg/shared";
 import { getVendor } from "../actions";
 import { VendorDetailClient } from "./vendor-detail-client";
+import { VendorBrandsTab } from "./vendor-brands-tab";
+import { VendorContactsTab } from "./vendor-contacts-tab";
 
 const STATUS_PILL_MAP: Record<
   VendorStatus,
@@ -108,24 +110,12 @@ export default async function VendorDetailPage({
           {
             key: "brands",
             label: "Brands",
-            content: (
-              <Card>
-                <CardHeader title="Associated Brands" />
-                <p className="text-sm text-gray-500">
-                  No brands linked to this vendor yet.
-                </p>
-              </Card>
-            ),
+            content: <VendorBrandsTab vendorId={vendor.id} />,
           },
           {
             key: "contacts",
             label: "Contacts",
-            content: (
-              <Card>
-                <CardHeader title="Vendor Contacts" />
-                <p className="text-sm text-gray-500">No contacts on file.</p>
-              </Card>
-            ),
+            content: <VendorContactsTab vendorId={vendor.id} />,
           },
           {
             key: "activity",
