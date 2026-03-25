@@ -243,3 +243,65 @@ InternalAuthGuard (client) → onAuthStateChanged → check claims → retry if 
 | Seed script idempotent (re-run skips existing) | ✅ |
 | Firestore rules deployed with claim checks | ✅ |
 | No secrets committed | ✅ |
+
+---
+
+## 2026-03-24 — Phase 2B: Vendors Foundation
+
+**Branch:** `feat/phase-2b-vendors-foundation`
+
+### What was done
+
+1. **Vendor server actions** (`apps/web/src/app/(internal)/vendors/actions.ts`)
+   - `getVendors(statusFilter?)` — list with optional status filter, ordered by `legalCompanyName`
+   - `getVendor(id)` — single document fetch
+   - `createVendor(formData)` — validate required fields, create document, log activity
+   - `updateVendor(id, formData)` — validate, update, log activity
+   - Write access: `requireInternalUser()` (all internal users, not admin-only)
+   - Dot-notation `FormData` parsing for nested `Address` objects
+
+2. **Vendor list page** (`/vendors`)
+   - Server component fetching real Firestore data via `getVendors()`
+   - Client table with inline create/edit (same pattern as Sites)
+   - Status filter dropdown (All / Active / Inactive / Suspended / Archived)
+   - Columns: Legal Name (linked to detail), DBA, Status, Website, Created
+   - Empty state with call-to-action
+
+3. **Vendor detail page** (`/vendors/[vendorId]`)
+   - Server component: fetches real vendor data, returns 404 if not found
+   - TabShell with Overview (editable), Company Info, Brands (placeholder), Contacts (placeholder), Activity (placeholder)
+   - Overview tab: inline edit toggle with full VendorForm
+   - Company Info tab: read-only field display + address rendering
+   - Internal notes section (shown when present)
+
+4. **Vendor form** (`vendor-form.tsx`)
+   - Fields: legalCompanyName (required), dba, taxId, website, status (select), internalNotes (textarea)
+   - Address sub-forms for businessAddress and returnAddress (line1, line2, city, state, postalCode, country)
+   - `useActionState` pattern, error display, pending state
+
+5. **Firestore indexes**
+   - Added composite index: `vendors(status ASC, legalCompanyName ASC)` for status filter queries
+   - Deployed to `twg-dev`
+
+### Architecture decisions
+
+- **Internal-user writes** (not admin-only like Sites) — per PHASE_2B_PLAN.md, all internal users can manage vendors
+- **Dot-notation address parsing** — addresses serialized as `businessAddress.line1`, etc. in FormData, parsed server-side
+- **Reused existing data layer** — zero changes to `lib/firestore/helpers.ts`
+- **No new shared model fields** — all fields from `packages/shared/src/models/vendors.ts` used as-is
+
+### Verification results
+
+| Test | Result |
+|------|--------|
+| Vendor create (all fields + nested address) | ✅ |
+| Vendor read back (all fields correct) | ✅ |
+| Vendor update (status change, address add) | ✅ |
+| Activity log written and verified | ✅ |
+| Vendor list ordered by legalCompanyName | ✅ |
+| Status filter query works | ✅ |
+| Firestore rules: vendor write = isInternalUser() | ✅ |
+| Firestore rules: vendor read = isAuthenticated() | ✅ |
+| Server action uses requireInternalUser() (not admin) | ✅ |
+| `npm run build` passes | ✅ |
+| No secrets committed | ✅ |

@@ -1,5 +1,44 @@
-import { PageHeader, TabShell, Card, CardHeader, StatusPill, FooterActionBar } from "@/components/shell";
-import { Button } from "@/components/ui";
+import { notFound } from "next/navigation";
+import { PageHeader, TabShell, Card, CardHeader, StatusPill } from "@/components/shell";
+import { requireInternalUser } from "@/lib/auth/session";
+import { VendorStatus } from "@twg/shared";
+import type { Address } from "@twg/shared";
+import { getVendor } from "../actions";
+import { VendorDetailClient } from "./vendor-detail-client";
+
+const STATUS_PILL_MAP: Record<
+  VendorStatus,
+  { label: string; variant: "green" | "gray" | "yellow" | "red" }
+> = {
+  [VendorStatus.Active]: { label: "Active", variant: "green" },
+  [VendorStatus.Inactive]: { label: "Inactive", variant: "gray" },
+  [VendorStatus.Suspended]: { label: "Suspended", variant: "yellow" },
+  [VendorStatus.Archived]: { label: "Archived", variant: "red" },
+};
+
+function AddressDisplay({ address, title }: { address?: Address; title: string }) {
+  if (!address) {
+    return (
+      <Card>
+        <CardHeader title={title} />
+        <p className="text-sm text-gray-500">No address on file</p>
+      </Card>
+    );
+  }
+  return (
+    <Card>
+      <CardHeader title={title} />
+      <address className="space-y-0.5 text-sm not-italic text-gray-700">
+        <p>{address.line1}</p>
+        {address.line2 && <p>{address.line2}</p>}
+        <p>
+          {address.city}, {address.state} {address.postalCode}
+        </p>
+        <p>{address.country}</p>
+      </address>
+    </Card>
+  );
+}
 
 export default async function VendorDetailPage({
   params,
@@ -7,13 +46,20 @@ export default async function VendorDetailPage({
   params: Promise<{ vendorId: string }>;
 }) {
   const { vendorId } = await params;
+  const user = await requireInternalUser();
+  const vendor = await getVendor(vendorId);
+
+  if (!vendor) notFound();
+
+  const canManage = user.category === "internal";
+  const pill = STATUS_PILL_MAP[vendor.status] ?? { label: vendor.status, variant: "gray" as const };
 
   return (
     <div>
       <PageHeader
-        title="Vendor Detail"
-        description={`Vendor ID: ${vendorId}`}
-        actions={<StatusPill label="Active" variant="green" />}
+        title={vendor.legalCompanyName}
+        description={vendor.dba ? `DBA: ${vendor.dba}` : undefined}
+        actions={<StatusPill label={pill.label} variant={pill.variant} />}
       />
 
       <TabShell
@@ -22,15 +68,22 @@ export default async function VendorDetailPage({
             key: "overview",
             label: "Overview",
             content: (
+              <VendorDetailClient vendor={vendor} canManage={canManage} />
+            ),
+          },
+          {
+            key: "company",
+            label: "Company Info",
+            content: (
               <div className="grid gap-6 lg:grid-cols-2">
                 <Card>
                   <CardHeader title="Company Information" />
                   <dl className="space-y-3 text-sm">
                     {[
-                      ["Legal Name", "—"],
-                      ["DBA", "—"],
-                      ["Tax ID", "—"],
-                      ["Website", "—"],
+                      ["Legal Name", vendor.legalCompanyName],
+                      ["DBA", vendor.dba ?? "—"],
+                      ["Tax ID", vendor.taxId ?? "—"],
+                      ["Website", vendor.website ?? "—"],
                     ].map(([label, value]) => (
                       <div key={label} className="flex justify-between">
                         <dt className="text-gray-500">{label}</dt>
@@ -38,13 +91,17 @@ export default async function VendorDetailPage({
                       </div>
                     ))}
                   </dl>
-                  {/* TODO: fetch vendor document from Firestore */}
                 </Card>
-                <Card>
-                  <CardHeader title="Business Address" />
-                  <p className="text-sm text-gray-500">No address on file</p>
-                  {/* TODO: display vendor address */}
-                </Card>
+                <div className="space-y-6">
+                  <AddressDisplay
+                    address={vendor.businessAddress}
+                    title="Business Address"
+                  />
+                  <AddressDisplay
+                    address={vendor.returnAddress}
+                    title="Return Address"
+                  />
+                </div>
               </div>
             ),
           },
@@ -57,7 +114,6 @@ export default async function VendorDetailPage({
                 <p className="text-sm text-gray-500">
                   No brands linked to this vendor yet.
                 </p>
-                {/* TODO: list brands for this vendor */}
               </Card>
             ),
           },
@@ -67,49 +123,7 @@ export default async function VendorDetailPage({
             content: (
               <Card>
                 <CardHeader title="Vendor Contacts" />
-                <p className="text-sm text-gray-500">
-                  No contacts on file.
-                </p>
-                {/* TODO: list contacts for this vendor */}
-              </Card>
-            ),
-          },
-          {
-            key: "quotes",
-            label: "Quotes",
-            content: (
-              <Card>
-                <CardHeader title="Linked Quotes" />
-                <p className="text-sm text-gray-500">
-                  No quotes associated with this vendor.
-                </p>
-                {/* TODO: list quotes for this vendor */}
-              </Card>
-            ),
-          },
-          {
-            key: "agreements",
-            label: "Agreements",
-            content: (
-              <Card>
-                <CardHeader title="Linked Agreements" />
-                <p className="text-sm text-gray-500">
-                  No agreements associated with this vendor.
-                </p>
-                {/* TODO: list agreements for this vendor */}
-              </Card>
-            ),
-          },
-          {
-            key: "documents",
-            label: "Documents",
-            content: (
-              <Card>
-                <CardHeader title="Uploaded Documents" />
-                <p className="text-sm text-gray-500">
-                  No documents uploaded.
-                </p>
-                {/* TODO: list documents for this vendor */}
+                <p className="text-sm text-gray-500">No contacts on file.</p>
               </Card>
             ),
           },
@@ -120,21 +134,22 @@ export default async function VendorDetailPage({
               <Card>
                 <CardHeader title="Activity History" />
                 <p className="text-sm text-gray-500">
-                  No activity recorded yet.
+                  Activity log entries will appear here.
                 </p>
-                {/* TODO: fetch activity logs for this vendor */}
               </Card>
             ),
           },
         ]}
       />
 
-      <FooterActionBar>
-        <Button variant="secondary" disabled>
-          Cancel
-        </Button>
-        <Button disabled>Save Changes</Button>
-      </FooterActionBar>
+      {vendor.internalNotes && (
+        <Card className="mt-6">
+          <CardHeader title="Internal Notes" />
+          <p className="whitespace-pre-wrap text-sm text-gray-700">
+            {vendor.internalNotes}
+          </p>
+        </Card>
+      )}
     </div>
   );
 }
