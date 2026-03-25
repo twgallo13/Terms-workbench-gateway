@@ -348,3 +348,63 @@ Added Google sign-in to the internal admin `/login` page alongside the existing 
 | Email user reaches /dashboard (200) | ✅ |
 | Vendor routes untouched (/vendor-access returns 200) | ✅ |
 | `next build` passes | ✅ |
+
+---
+
+## Phase 2C — Brands & Contacts Foundation (feat/phase-2c-brands-contacts)
+
+**Date:** 2026-03-25
+**Branch:** `feat/phase-2c-brands-contacts`
+
+### Scope
+
+Deliver Brands, Contacts, and BrandContactAssignments — the master-data foundation on top of the existing auth and typed Firestore layer. No Site Approvals, Quotes, Agreements, or workflow logic.
+
+### Changes
+
+| File | Change |
+|------|--------|
+| `brands/actions.ts` | `getBrands`, `getBrand`, `createBrand`, `updateBrand`, `getVendorsForPicker` server actions |
+| `brands/brand-form.tsx` | Brand form with vendor picker, status select, internal notes |
+| `brands/brands-table.tsx` | Brand list table with status filter, vendor name resolution, inline create/edit |
+| `brands/page.tsx` | Replaced placeholder with real server component list page |
+| `brands/[brandId]/page.tsx` | Brand detail with overview, contacts tab, site approvals placeholder, activity placeholder |
+| `brands/[brandId]/brand-detail-client.tsx` | Overview tab with edit toggle |
+| `brands/[brandId]/brand-contacts-tab.tsx` | Assign/remove contacts to brand, role + primary flag |
+| `brands/assignment-actions.ts` | `assignContactToBrand`, `removeContactFromBrand`, `getBrandContacts`, `getContactBrands` |
+| `contacts/actions.ts` | `getContacts`, `getContact`, `createContact`, `updateContact` server actions |
+| `contacts/contact-form.tsx` | Contact form with all fields, vendor picker, type select, isPrimary checkbox |
+| `contacts/contacts-table.tsx` | Contact list table with status filter, vendor column, inline create/edit |
+| `contacts/page.tsx` | Replaced placeholder with real server component list page |
+| `contacts/[contactId]/page.tsx` | Contact detail with overview, brand assignments tab, activity placeholder |
+| `contacts/[contactId]/contact-detail-client.tsx` | Overview tab with edit toggle |
+| `contacts/[contactId]/contact-brands-tab.tsx` | Shows brands assigned to this contact |
+| `vendors/[vendorId]/page.tsx` | Replaced placeholder Brands/Contacts tabs with real data |
+| `vendors/[vendorId]/vendor-brands-tab.tsx` | Fetches brands by vendorId |
+| `vendors/[vendorId]/vendor-contacts-tab.tsx` | Fetches contacts by vendorId |
+| `firebase/firestore.indexes.json` | Added 5 composite indexes for brands, contacts, assignments |
+| `README.md` | Updated feature list, removed Brands/Contacts from deferred |
+| `BUILD_LOG.md` | Added this section |
+
+### Data approach
+
+- Reuses existing `@twg/shared` models: `Brand`, `Contact`, `BrandContactAssignment`
+- Reuses existing enums: `BrandStatus`, `ContactStatus`, `ContactType`
+- Reuses existing Firestore helpers: `createDocument`, `updateDocument`, `listDocuments`, `getDocument`, `deleteDocument`, `logActivity`
+- Vendor name resolution via batch lookup (Option B from plan — no denormalization)
+- All server actions use `requireInternalUser()` for auth
+
+### Firestore rules
+
+No changes needed — brands, contacts, and brandContactAssignments rules were already set to `write: isInternalUser()` and `read: isAuthenticated()` in Phase 2A.
+
+### Verification results
+
+| Test | Result |
+|------|--------|
+| `next build` passes with no type errors | ✅ |
+| All routes render: /brands, /brands/[id], /contacts, /contacts/[id] | ✅ |
+| No secrets committed | ✅ |
+| No new ESLint warnings introduced | ✅ |
+| Firestore indexes file valid JSON | ✅ |
+| Vendor detail Brands/Contacts tabs wired to real data | ✅ |
