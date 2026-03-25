@@ -83,7 +83,7 @@ npm run dev --workspace=@twg/web
 ## Auth Architecture
 
 ### Session flow
-1. User signs in on `/login` with Email/Password via Firebase Auth client SDK
+1. User signs in on `/login` via Google (popup) or Email/Password through Firebase Auth client SDK
 2. Client obtains an ID token and POSTs it to `/api/auth/session`
 3. Server verifies the token via Firebase Admin SDK and sets an httpOnly `__session` cookie (5-day expiry)
 4. Internal routes are protected by server-side layout verification (`requireInternalUser()`)
@@ -116,7 +116,7 @@ node ../../scripts/backfill-claims.mjs
 - Dashboard with 6 placeholder sections
 - Shared types: 25+ enums, 40+ interfaces, constants
 - Firebase rules (Firestore + Storage) with default-deny
-- **Real Firebase Auth** — Email/Password sign-in, session cookie, server verification
+- **Real Firebase Auth** — Google sign-in and Email/Password, session cookie, server verification
 - **Auth guard** — dual-layer (server + client) with claims provisioning race handling
 - **Cloud Function** — `onUserCreated` deployed to `twg-dev` (sets claims, creates user doc)
 - **Firestore data layer** — typed CRUD helpers with auto-timestamps and activity logging
@@ -127,7 +127,6 @@ node ../../scripts/backfill-claims.mjs
 - PDF renderer: Cloud Run placeholder
 
 ### What's intentionally deferred
-- Google sign-in UI (provider already enabled)
 - Brand, Contact CRUD operations
 - Quote/agreement workflow logic
 - Send/sign/acceptance flow

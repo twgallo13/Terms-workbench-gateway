@@ -305,3 +305,46 @@ InternalAuthGuard (client) → onAuthStateChanged → check claims → retry if 
 | Server action uses requireInternalUser() (not admin) | ✅ |
 | `npm run build` passes | ✅ |
 | No secrets committed | ✅ |
+
+---
+
+## Google Sign-In (feat/google-sign-in)
+
+**Date:** 2026-03-25
+**Branch:** `feat/google-sign-in`
+
+### Scope
+
+Added Google sign-in to the internal admin `/login` page alongside the existing Email/Password flow. No changes to vendor routes, session architecture, or auth guards.
+
+### Changes
+
+| File | Change |
+|------|--------|
+| `apps/web/src/app/(auth)/login/page.tsx` | Added "Continue with Google" button using `signInWithPopup` + `GoogleAuthProvider`; extracted shared `createSessionAndRedirect` helper; added popup-related error messages; both sign-in methods disabled while either is in progress |
+| `README.md` | Updated session flow description, auth feature list, removed Google sign-in from deferred list |
+| `BUILD_LOG.md` | Added this section |
+
+### How it works
+
+1. User clicks "Continue with Google" → Firebase `signInWithPopup(auth, googleProvider)`
+2. On success, `user.getIdToken()` obtains the ID token (includes custom claims)
+3. ID token POSTed to `POST /api/auth/session` → same httpOnly `__session` cookie flow as Email/Password
+4. Redirect to `/dashboard`
+5. Internal auth guards (`requireInternalUser` server-side, `InternalAuthGuard` client-side) enforce `category: "internal"` — same as before
+6. External Google users are blocked by existing rules (no code change needed)
+
+### Verification results
+
+| Test | Result |
+|------|--------|
+| `/login` returns 200, contains "Continue with Google" button | ✅ |
+| `/login` contains Google logo SVG | ✅ |
+| `/login` still contains Email/Password "Sign In" form | ✅ |
+| Google user (theo@shiekhshoes.org) session creation | ✅ |
+| Google user reaches /dashboard (200) | ✅ |
+| No provisioning error for Google user | ✅ |
+| Email user (theo@shiekh.com) session flow still works | ✅ |
+| Email user reaches /dashboard (200) | ✅ |
+| Vendor routes untouched (/vendor-access returns 200) | ✅ |
+| `next build` passes | ✅ |
