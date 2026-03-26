@@ -26,9 +26,11 @@ function getAdminApp(): App {
   });
 }
 
+const FIRESTORE_DB_ID = process.env.FIRESTORE_DB_ID || "twg-db-terms";
+
 const adminApp = getAdminApp();
 const adminAuth = getAuth(adminApp);
-const adminDb = getFirestore(adminApp);
+const adminDb = getFirestore(adminApp, FIRESTORE_DB_ID);
 const adminStorage = getStorage(adminApp);
 
 export { adminApp, adminAuth, adminDb, adminStorage };

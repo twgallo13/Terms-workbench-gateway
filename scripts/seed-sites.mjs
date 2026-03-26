@@ -23,7 +23,8 @@ if (!saPath) {
 const absPath = resolve(process.cwd(), saPath);
 const sa = JSON.parse(readFileSync(absPath, "utf8"));
 const app = initializeApp({ credential: cert(sa) });
-const db = getFirestore(app);
+const FIRESTORE_DB_ID = process.env.FIRESTORE_DB_ID || "twg-db-terms";
+const db = getFirestore(app, FIRESTORE_DB_ID);
 
 // ── Seed data (mirrors SEED_SITES from @twg/shared) ─────────────────────────
 const SEED_SITES = [

@@ -4,6 +4,9 @@
  * solution is adopted for Cloud Functions deployment.
  */
 
+/** Named Firestore database ID — must match the client SDK config. */
+export const FIRESTORE_DB_ID = process.env.FIRESTORE_DB_ID || "twg-db-terms";
+
 export const SEED_ADMIN_EMAILS = [
   "theo@shiekhshoes.org",
   "theo@shiekh.com",

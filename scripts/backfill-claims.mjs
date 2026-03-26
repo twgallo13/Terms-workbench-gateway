@@ -43,7 +43,8 @@ const app = initializeApp({
 });
 
 const auth = getAuth(app);
-const db = getFirestore(app);
+const FIRESTORE_DB_ID = process.env.FIRESTORE_DB_ID || "twg-db-terms";
+const db = getFirestore(app, FIRESTORE_DB_ID);
 
 // ── Main ────────────────────────────────────────────────────────────────────
 async function backfill() {

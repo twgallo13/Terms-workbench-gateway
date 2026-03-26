@@ -1,6 +1,6 @@
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
-import { COLLECTIONS, SEED_INTERNAL_DOMAINS, SEED_ADMIN_EMAILS } from "../config/seed-constants";
+import { COLLECTIONS, FIRESTORE_DB_ID, SEED_INTERNAL_DOMAINS, SEED_ADMIN_EMAILS } from "../config/seed-constants";
 
 export interface ProvisionResult {
   status: "success" | "denied";
@@ -17,7 +17,7 @@ export interface ProvisionResult {
  * Sets custom claims and creates/updates the Firestore user document.
  */
 export async function provisionUserCore(uid: string, email: string, displayName?: string): Promise<ProvisionResult> {
-  const db = getFirestore();
+  const db = getFirestore(FIRESTORE_DB_ID);
   const adminAuth = getAuth();
   const normalizedEmail = email.toLowerCase();
   const domain = normalizedEmail.split("@")[1] ?? "";
