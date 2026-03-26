@@ -11,6 +11,10 @@ runConfig:
   concurrency: 80
 
 env:
+  # ── Monorepo: tell the buildpack where the Next.js app lives ──
+  - variable: GOOGLE_BUILDABLE
+    value: apps/web
+
   # ── Client-side Firebase config (non-secret, baked into JS bundle) ──
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: AIzaSyBKjQsTYc4F60HV1yYHkPpQ1Cukpgh2u_U
