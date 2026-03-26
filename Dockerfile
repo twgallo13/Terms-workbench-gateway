@@ -18,6 +18,7 @@ RUN npm ci
 # Copy source
 COPY packages/shared/ packages/shared/
 COPY apps/web/ apps/web/
+COPY scripts/ scripts/
 
 # Build shared lib first, then web
 RUN npm run build --workspace=packages/shared
