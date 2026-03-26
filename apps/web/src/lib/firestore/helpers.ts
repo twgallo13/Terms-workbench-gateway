@@ -2,8 +2,35 @@ import {
   type DocumentData,
   type WhereFilterOp,
   type OrderByDirection,
+  Timestamp,
 } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
+
+// ─── Serialization ──────────────────────────────────────────────────────────
+// Firestore can return Timestamp class instances for date fields.
+// These are not plain objects and cannot cross the RSC → Client boundary.
+// Convert them to ISO strings at the read boundary.
+
+function serializeValue(val: unknown): unknown {
+  if (val instanceof Timestamp) {
+    return val.toDate().toISOString();
+  }
+  if (Array.isArray(val)) {
+    return val.map(serializeValue);
+  }
+  if (val !== null && typeof val === "object") {
+    return serializePlain(val as Record<string, unknown>);
+  }
+  return val;
+}
+
+function serializePlain(obj: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    out[k] = serializeValue(v);
+  }
+  return out;
+}
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -32,7 +59,7 @@ export async function getDocument<T>(
 ): Promise<T | null> {
   const snap = await adminDb.collection(collection).doc(id).get();
   if (!snap.exists) return null;
-  return { id: snap.id, ...snap.data() } as T;
+  return { id: snap.id, ...serializePlain(snap.data()!) } as T;
 }
 
 export async function listDocuments<T>(
@@ -57,7 +84,7 @@ export async function listDocuments<T>(
   }
 
   const snap = await query.get();
-  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as T);
+  return snap.docs.map((doc) => ({ id: doc.id, ...serializePlain(doc.data()) }) as T);
 }
 
 // ─── Write helpers ──────────────────────────────────────────────────────────
