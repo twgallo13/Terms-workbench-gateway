@@ -17,3 +17,6 @@ firebase/emulator-data/
 service-account-key.json
 *-service-account*.json
 *-credentials*.json
+
+# Nested lockfiles (CI copies root lockfile where needed)
+apps/web/package-lock.json
