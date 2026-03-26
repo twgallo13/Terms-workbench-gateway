@@ -13,8 +13,12 @@ initializeApp();
 export { onUserCreated } from "./auth/on-user-created";
 
 // ─── Callable functions ─────────────────────────────────────────────────────
-// TODO: export callable functions as they are built:
-//   - generateAccessLink
+export { bootstrapUser } from "./auth/bootstrap-user";
+
+// ─── HTTP functions (CORS-safe) ─────────────────────────────────────────────
+export { bootstrapUserOnRequest } from "./auth/bootstrap-user-on-request";
+
+// ─── Callable functions (TODO) ──────────────────────────────────────────────
 //   - revokeAccessLink
 //   - acceptAgreement
 //   - createQuoteVersion
